@@ -7,67 +7,68 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
+      padding: 40px;
       background-color: #000;
       color: #fff;
       text-align: center;
+      font-size: 1.5rem;
     }
     .hidden { display: none; }
-    .player-input { margin-bottom: 5px; }
+    .player-input {
+      margin-bottom: 10px;
+      font-size: 1.5rem;
+      padding: 10px;
+      width: 80%;
+    }
     button {
-      padding: 10px 20px;
-      margin: 10px 0;
+      padding: 16px 32px;
+      margin: 20px 0;
       background-color: #444;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 10px;
       font-weight: bold;
+      font-size: 1.5rem;
     }
-    input {
-      padding: 5px;
-      margin-left: 5px;
-    }
-    .highlight {
-      border: 2px solid lime;
-      border-radius: 20px;
-      padding: 5px 10px;
-      display: inline-block;
+    input[type="number"] {
+      padding: 10px;
+      font-size: 1.5rem;
+      width: 100px;
+      margin: 10px;
     }
     .highlight-cell {
       border: 2px solid lime;
       border-radius: 10px;
-      padding: 2px 6px;
+      padding: 6px 12px;
       display: inline-block;
+      font-size: 1.4rem;
     }
     h1 {
-      font-size: 3rem;
+      font-size: 4rem;
       font-family: 'Comic Sans MS', cursive, sans-serif;
       background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 30px;
+      margin-bottom: 50px;
       transform: rotate(-2deg);
       display: inline-block;
     }
     .round-info p {
-      font-size: 2rem;
-      margin: 0.5em 0;
+      font-size: 2.5rem;
+      margin: 1em 0;
     }
-    .history {
-      text-align: center;
-      margin-top: 20px;
+    #results p,
+    #results li,
+    #history td,
+    #history th {
+      font-size: 1.4rem;
     }
-    .history table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
+    #history table {
+      font-size: 1.4rem;
+      margin: 20px auto;
     }
-    .history th, .history td {
-      border: 1px solid #fff;
-      padding: 6px;
-    }
-    .history th {
-      background-color: #222;
+    #animatedAlert {
+      font-size: 1.4rem;
     }
     @keyframes pulse {
       0% { transform: scale(1); }
