@@ -54,7 +54,7 @@
       display: inline-block;
     }
     .round-info p {
-      font-size: 2.5rem;
+      font-size: 3rem;
       margin: 1em 0;
     }
     #results p,
@@ -83,8 +83,6 @@
     <h2>Enter Player Names</h2>
     <div id="playerInputs"></div>
     <button id="addPlayerBtn">Add Player</button>
-    <h3>Game Settings</h3>
-    <label>Number of Rounds: <input type="number" id="roundsInput" min="8" max="20" value="16"></label><br>
     <button id="startGameBtn">Start Game</button>
   </div>
   <div id="biddingScreen" class="hidden">
@@ -99,14 +97,13 @@
     let players = [];
     let scores = {};
     let currentRound = 0;
-    let cardsSequence = [];
+    const cardsSequence = [...Array(8).keys()].map(n => 8 - n).concat([...Array(8).keys()].map(n => n + 1));
     const trumps = ["❤️ Hearts", "♦️ Diamonds", "♣️ Clubs", "♠️ Spades", "No Trumps"];
     let roundHistory = [];
 
     const playerInputsDiv = document.getElementById('playerInputs');
     const addPlayerBtn = document.getElementById('addPlayerBtn');
     const startGameBtn = document.getElementById('startGameBtn');
-    const roundsInput = document.getElementById('roundsInput');
     const playerEntryScreen = document.getElementById('playerEntryScreen');
     const biddingScreen = document.getElementById('biddingScreen');
     const bidsForm = document.getElementById('bidsForm');
@@ -124,9 +121,6 @@
 
     startGameBtn.addEventListener('click', () => {
       players = Array.from(document.querySelectorAll('.player-input')).map(input => input.value).filter(Boolean);
-      const roundsCount = parseInt(roundsInput.value, 10);
-      cardsSequence = [...Array(8).keys()].map(n => 8 - n).concat([...Array(8).keys()].map(n => n + 1));
-      if (roundsCount !== 16) cardsSequence.length = roundsCount;
       players.forEach(player => scores[player] = 0);
       updateRoundInfo();
       generateBiddingInputs();
@@ -137,7 +131,7 @@
     function updateRoundInfo() {
       const cardsDealt = cardsSequence[currentRound];
       const trumpSuit = trumps[currentRound % trumps.length];
-      document.querySelector('.round-info').innerHTML = `<p><strong>Round ${currentRound + 1} of ${cardsSequence.length}</strong></p><p style="font-size: 3rem;"><strong>${cardsDealt} - ${trumpSuit}</strong></p>`;
+      document.querySelector('.round-info').innerHTML = `<p><strong>${cardsDealt} - ${trumpSuit}</strong></p>`;
     }
 
     function generateBiddingInputs() {
@@ -190,6 +184,7 @@
         const input = document.getElementById(`bid-${index}`);
         input.addEventListener('input', updateBidTotal);
       });
+
       updateBidTotal();
 
       bidsForm.onsubmit = function(event) {
@@ -207,7 +202,7 @@
         generateResultsInputs();
         resultsForm.classList.remove('hidden');
         bidsForm.classList.add('hidden');
-      };
+      }
     }
 
     function showAnimatedAlert(message) {
@@ -237,7 +232,91 @@
         setTimeout(() => alertBox.remove(), 800);
       }, 2000);
     }
-  </script>
+
+    function generateResultsInputs() {
+      resultsForm.innerHTML = '';
+      players.forEach((player, index) => {
+        const label = document.createElement('label');
+        label.textContent = `${player}'s Tricks Won:`;
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.id = `result-${index}`;
+        input.min = 0;
+        input.value = 0;
+        resultsForm.appendChild(label);
+        resultsForm.appendChild(input);
+        resultsForm.appendChild(document.createElement('br'));
+      });
+
+      const submitBtn = document.createElement('button');
+      submitBtn.type = 'submit';
+      submitBtn.textContent = 'Submit Results';
+      resultsForm.appendChild(submitBtn);
+
+      resultsForm.onsubmit = function (event) {
+        event.preventDefault();
+        let summary = `<h3>Round Results:</h3><ul>`;
+        let roundData = [];
+        players.forEach((player, index) => {
+          const bid = parseInt(document.getElementById(`bid-${index}`).value, 10);
+          const tricks = parseInt(document.getElementById(`result-${index}`).value, 10);
+          let score = tricks;
+          if (bid === tricks) score += 10;
+          scores[player] += score;
+          roundData.push({ player, bid, tricks, score });
+          summary += bid === tricks
+            ? `<li><span class='highlight-cell'>${player}: Bid ${bid}, Won ${tricks}, Score +${score}</span></li>`
+            : `<li>${player}: Bid ${bid}, Won ${tricks}, Score +${score}</li>`;
+        });
+        summary += '</ul>';
+        resultsDiv.innerHTML = summary;
+
+        roundHistory.push({ round: currentRound + 1, data: roundData });
+        updateHistoryDisplay();
+
+        if (currentRound < cardsSequence.length - 1) {
+          currentRound++;
+          updateRoundInfo();
+          generateBiddingInputs();
+          bidsForm.classList.remove('hidden');
+          resultsForm.classList.add('hidden');
+        } else {
+          resultsDiv.innerHTML += '<h2>Game Over!</h2>';
+          resultsForm.classList.add('hidden');
+        }
+      };
+    }
+
+    newGameBtn.addEventListener('click', () => {
+      location.reload();
+    });
+  function updateHistoryDisplay() {
+      let runningTotals = {};
+      players.forEach(p => runningTotals[p] = 0);
+
+      let historyHTML = '<h3>Round History</h3><table><thead><tr><th>Round</th>';
+      players.forEach(player => {
+        historyHTML += `<th>${player}</th>`;
+      });
+      historyHTML += '</tr></thead><tbody>';
+
+      roundHistory.forEach(round => {
+        historyHTML += `<tr><td>${round.round}</td>`;
+        round.data.forEach(entry => {
+          runningTotals[entry.player] += entry.score;
+          const content = `Bid ${entry.bid} / Won ${entry.tricks} / +${entry.score} / Total ${runningTotals[entry.player]}`;
+          const cell = entry.bid === entry.tricks
+            ? `<span class='highlight-cell'>${content}</span>`
+            : content;
+          historyHTML += `<td>${cell}</td>`;
+        });
+        historyHTML += '</tr>';
+      });
+
+      historyHTML += '</tbody></table>';
+      historyDiv.innerHTML = historyHTML;
+    }
+
+</script>
 </body>
 </html>
-
