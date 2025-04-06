@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shit on Your Oppo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #000;
+      color: #fff;
+      text-align: center;
+    }
+    .hidden { display: none; }
+    .player-input { margin-bottom: 5px; }
+    button {
+      padding: 10px 20px;
+      margin: 10px 0;
+      background-color: #444;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    input {
+      padding: 5px;
+      margin-left: 5px;
+    }
+    .highlight {
+      border: 2px solid lime;
+      border-radius: 20px;
+      padding: 5px 10px;
+      display: inline-block;
+    }
+    .highlight-cell {
+      border: 2px solid lime;
+      border-radius: 10px;
+      padding: 2px 6px;
+      display: inline-block;
+    }
+    h1 {
+      font-size: 3rem;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 30px;
+      transform: rotate(-2deg);
+      display: inline-block;
+    }
+    .round-info p {
+      font-size: 2rem;
+      margin: 0.5em 0;
+    }
+    .history {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .history table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .history th, .history td {
+      border: 1px solid #fff;
+      padding: 6px;
+    }
+    .history th {
+      background-color: #222;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Shit on Your Oppo</h1>
+  <div id="playerEntryScreen">
+    <h2>Enter Player Names</h2>
+    <div id="playerInputs"></div>
+    <button id="addPlayerBtn">Add Player</button>
+    <h3>Game Settings</h3>
+    <label>Number of Rounds: <input type="number" id="roundsInput" min="8" max="20" value="16"></label><br>
+    <button id="startGameBtn">Start Game</button>
+  </div>
+  <div id="biddingScreen" class="hidden">
+    <div class="round-info"></div>
+    <form id="bidsForm"></form>
+    <form id="resultsForm" class="hidden"></form>
+    <div id="results"></div>
+    <div id="history" class="history"></div>
+    <button id="newGameBtn">New Game</button>
+  </div>
+  <script>
+    let players = [];
+    let scores = {};
+    let currentRound = 0;
+    let cardsSequence = [];
+    const trumps = ["❤️ Hearts", "♦️ Diamonds", "♣️ Clubs", "♠️ Spades", "No Trumps"];
+    let roundHistory = [];
+
+    const playerInputsDiv = document.getElementById('playerInputs');
+    const addPlayerBtn = document.getElementById('addPlayerBtn');
+    const startGameBtn = document.getElementById('startGameBtn');
+    const roundsInput = document.getElementById('roundsInput');
+    const playerEntryScreen = document.getElementById('playerEntryScreen');
+    const biddingScreen = document.getElementById('biddingScreen');
+    const bidsForm = document.getElementById('bidsForm');
+    const resultsForm = document.getElementById('resultsForm');
+    const resultsDiv = document.getElementById('results');
+    const historyDiv = document.getElementById('history');
+    const newGameBtn = document.getElementById('newGameBtn');
+
+    addPlayerBtn.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.placeholder = 'Player Name';
+      input.className = 'player-input';
+      playerInputsDiv.appendChild(input);
+    });
+
+    startGameBtn.addEventListener('click', () => {
+      players = Array.from(document.querySelectorAll('.player-input')).map(input => input.value).filter(Boolean);
+      const roundsCount = parseInt(roundsInput.value, 10);
+      cardsSequence = [...Array(8).keys()].map(n => 8 - n).concat([...Array(8).keys()].map(n => n + 1));
+      if (roundsCount !== 16) cardsSequence.length = roundsCount;
+      players.forEach(player => scores[player] = 0);
+      updateRoundInfo();
+      generateBiddingInputs();
+      playerEntryScreen.classList.add('hidden');
+      biddingScreen.classList.remove('hidden');
+    });
+
+    function updateRoundInfo() {
+      const cardsDealt = cardsSequence[currentRound];
+      const trumpSuit = trumps[currentRound % trumps.length];
+      document.querySelector('.round-info').innerHTML = `<p><strong>Round ${currentRound + 1} of ${cardsSequence.length}</strong></p><p style="font-size: 3rem;"><strong>${cardsDealt} - ${trumpSuit}</strong></p>`;
+    }
+
+    function generateBiddingInputs() {
+      bidsForm.innerHTML = '';
+      resultsForm.classList.add('hidden');
+      resultsForm.innerHTML = '';
+      resultsDiv.innerHTML = '';
+
+      players.forEach((player, index) => {
+        const label = document.createElement('label');
+        label.textContent = `${player}'s Bid:`;
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.id = `bid-${index}`;
+        input.min = 0;
+        input.value = 0;
+        bidsForm.appendChild(label);
+        bidsForm.appendChild(input);
+        bidsForm.appendChild(document.createElement('br'));
+      });
+
+      const submitBtn = document.createElement('button');
+      submitBtn.type = 'submit';
+      submitBtn.textContent = 'Submit Bids';
+      bidsForm.appendChild(submitBtn);
+
+      const totalDisplay = document.createElement('p');
+      totalDisplay.style.fontWeight = 'bold';
+      totalDisplay.style.marginTop = '10px';
+      bidsForm.appendChild(totalDisplay);
+
+      function updateBidTotal() {
+        let currentTotal = 0;
+        players.forEach((_, index) => {
+          const input = document.getElementById(`bid-${index}`);
+          const val = parseInt(input.value, 10);
+          if (!isNaN(val)) currentTotal += val;
+        });
+        const cardsDealt = cardsSequence[currentRound];
+        const remaining = cardsDealt - currentTotal;
+        totalDisplay.textContent = `Total bids: ${currentTotal} (Remaining: ${remaining})`;
+        totalDisplay.style.color = currentTotal === cardsDealt ? 'red' : 'lime';
+        if (currentTotal === cardsDealt) {
+          totalDisplay.style.animation = 'pulse 0.4s ease-in-out';
+          setTimeout(() => totalDisplay.style.animation = '', 400);
+        }
+      }
+
+      players.forEach((_, index) => {
+        const input = document.getElementById(`bid-${index}`);
+        input.addEventListener('input', updateBidTotal);
+      });
+      updateBidTotal();
+
+      bidsForm.onsubmit = function(event) {
+        event.preventDefault();
+        let totalBids = 0;
+        players.forEach((_, index) => {
+          const val = parseInt(document.getElementById(`bid-${index}`).value, 10);
+          if (!isNaN(val)) totalBids += val;
+        });
+        const cardsDealt = cardsSequence[currentRound];
+        if (totalBids === cardsDealt) {
+          showAnimatedAlert(`Total bids cannot equal cards dealt (${cardsDealt}). Adjust bids.`);
+          return;
+        }
+        generateResultsInputs();
+        resultsForm.classList.remove('hidden');
+        bidsForm.classList.add('hidden');
+      };
+    }
+
+    function showAnimatedAlert(message) {
+      let existing = document.getElementById('animatedAlert');
+      if (existing) existing.remove();
+
+      const alertBox = document.createElement('div');
+      alertBox.id = 'animatedAlert';
+      alertBox.textContent = message;
+      alertBox.style.position = 'fixed';
+      alertBox.style.top = '20px';
+      alertBox.style.left = '50%';
+      alertBox.style.transform = 'translateX(-50%)';
+      alertBox.style.padding = '12px 24px';
+      alertBox.style.backgroundColor = 'red';
+      alertBox.style.color = 'white';
+      alertBox.style.fontWeight = 'bold';
+      alertBox.style.border = '2px solid white';
+      alertBox.style.borderRadius = '10px';
+      alertBox.style.zIndex = '9999';
+      alertBox.style.opacity = '1';
+      alertBox.style.transition = 'opacity 0.8s ease-out';
+      document.body.appendChild(alertBox);
+
+      setTimeout(() => {
+        alertBox.style.opacity = '0';
+        setTimeout(() => alertBox.remove(), 800);
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
+
