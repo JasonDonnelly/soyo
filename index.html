@@ -122,6 +122,17 @@
     let roundHistory = [];
 
     const playerInputsDiv = document.getElementById('playerInputs');
+
+    function addPlayerInput(focus = false) {
+      const input = document.createElement('input');
+      input.placeholder = 'Player Name';
+      input.className = 'player-input';
+      playerInputsDiv.appendChild(input);
+      if (focus) input.focus();
+    }
+
+    // Add default player input on load
+    addPlayerInput(true);
     const addPlayerBtn = document.getElementById('addPlayerBtn');
     const startGameBtn = document.getElementById('startGameBtn');
     const playerEntryScreen = document.getElementById('playerEntryScreen');
@@ -133,13 +144,31 @@
     const newGameBtn = document.getElementById('newGameBtn');
 
     addPlayerBtn.addEventListener('click', () => {
-      const input = document.createElement('input');
-      input.placeholder = 'Player Name';
-      input.className = 'player-input';
-      playerInputsDiv.appendChild(input);
+      addPlayerInput(true);
     });
 
     startGameBtn.addEventListener('click', () => {
+      const nameInputs = Array.from(document.querySelectorAll('.player-input'));
+      let names = [];
+      let hasDuplicates = false;
+      nameInputs.forEach(input => {
+        const name = input.value.trim();
+        input.style.border = '';
+        if (names.includes(name)) {
+          hasDuplicates = true;
+          input.style.border = '3px solid red';
+        }
+        if (name) names.push(name);
+      });
+      if (hasDuplicates) {
+        showAnimatedAlert('Player names must be unique.');
+        return;
+      }
+      const nameSet = new Set(nameInputs);
+      if (nameInputs.length !== nameSet.size) {
+        showAnimatedAlert('Player names must be unique.');
+        return;
+      }
       players = Array.from(document.querySelectorAll('.player-input')).map(input => input.value).filter(Boolean);
       players.forEach(player => scores[player] = 0);
       updateRoundInfo();
@@ -151,7 +180,10 @@
     function updateRoundInfo() {
       const cardsDealt = cardsSequence[currentRound];
       const trumpSuit = trumps[currentRound % trumps.length];
-      document.querySelector('.round-info').innerHTML = `<p><strong>${cardsDealt} - ${trumpSuit}</strong></p>`;
+      const leader = Object.entries(scores).sort((a, b) => b[1] - a[1])[0]?.[0];
+      document.querySelector('.round-info').innerHTML = `
+        <p><strong>${cardsDealt} - ${trumpSuit}</strong></p>
+        <p style="font-size: 1.6rem; color: gold;">Current Leader: ${leader || 'N/A'}</p>`;
     }
 
     function generateBiddingInputs() {
@@ -162,6 +194,7 @@
 
       players.forEach((player, index) => {
         const label = document.createElement('label');
+        label.setAttribute('for', `result-${index}`);
         label.textContent = `${player}'s Bid:`;
         const input = document.createElement('input');
         input.type = 'number';
@@ -265,6 +298,7 @@
         input.value = 0;
         resultsForm.appendChild(label);
         resultsForm.appendChild(input);
+        if (index === 0) input.focus();
         resultsForm.appendChild(document.createElement('br'));
       });
 
@@ -274,6 +308,17 @@
       resultsForm.appendChild(submitBtn);
 
       resultsForm.onsubmit = function (event) {
+        event.preventDefault();
+        const cardsDealt = cardsSequence[currentRound];
+        let totalTricks = 0;
+        players.forEach((_, index) => {
+          const val = parseInt(document.getElementById(`result-${index}`).value, 10);
+          if (!isNaN(val)) totalTricks += val;
+        });
+        if (totalTricks !== cardsDealt) {
+          showAnimatedAlert(`Total tricks must equal cards dealt (${cardsDealt}).`);
+          return;
+        }
         event.preventDefault();
         let summary = `<h3>Round Results:</h3><ul>`;
         let roundData = [];
@@ -334,11 +379,17 @@
       });
 
       historyHTML += '</tbody></table>';
+      historyHTML += `<p style='margin-top: 1rem; font-size: 1.6rem; color: cyan;'>Leader: ${Object.entries(runningTotals).sort((a,b) => b[1] - a[1])[0]?.[0]}</p>`;
       historyDiv.innerHTML = historyHTML;
     }
 
-document.getElementById('splashScreen').addEventListener('click', () => {
-  document.getElementById('splashScreen').style.display = 'none';
+window.addEventListener('DOMContentLoaded', () => {
+  const splash = document.getElementById('splashScreen');
+  if (splash) {
+    splash.addEventListener('click', () => {
+      splash.style.display = 'none';
+    });
+  }
 });
 </script>
 </body>
