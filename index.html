@@ -44,7 +44,7 @@
       font-size: 1.4rem;
     }
     h1 {
-      font-size: 5rem;
+      font-size: 4rem;
       font-family: 'Comic Sans MS', cursive, sans-serif;
       background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
       -webkit-background-clip: text;
@@ -76,8 +76,28 @@
       100% { transform: scale(1); }
     }
   </style>
+<style>
+    #splashScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #000;
+      background-image: url('soyo-splash.png'); /* Replace with your actual path */
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      z-index: 10000;
+    }
+  </style>
 </head>
 <body>
+  <div id="splashScreen">
+    <div style="position: absolute; bottom: 40px; width: 100%; text-align: center; color: white; font-size: 2rem; font-weight: bold; text-shadow: 0 0 10px black;">
+      Tap to Start
+    </div>
+  </div>
   <h1>Shit on Your Oppo</h1>
   <div id="playerEntryScreen">
     <h2>Enter Player Names</h2>
@@ -317,6 +337,9 @@
       historyDiv.innerHTML = historyHTML;
     }
 
+document.getElementById('splashScreen').addEventListener('click', () => {
+  document.getElementById('splashScreen').style.display = 'none';
+});
 </script>
 </body>
 </html>
