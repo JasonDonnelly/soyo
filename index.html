@@ -110,8 +110,7 @@
     </div>
   </div>
   <div id="splashBanner"></div>
-  </div>
-  
+    
   <div id="playerEntryScreen">
     <h2>Enter Player Names</h2>
     <div id="playerInputs"></div>
@@ -209,7 +208,6 @@
         input.type = 'number';
         input.id = `bid-${index}`;
         input.min = 0;
-        input.value = 0;
         bidsForm.appendChild(label);
         bidsForm.appendChild(input);
         bidsForm.appendChild(document.createElement('br'));
@@ -258,7 +256,9 @@
         event.preventDefault();
         let totalBids = 0;
         players.forEach((_, index) => {
-          const val = parseInt(document.getElementById(`bid-${index}`).value, 10);
+          const bidInput = document.getElementById(`bid-${index}`);
+          if (!bidInput.value) bidInput.value = 0;
+          const val = parseInt(bidInput.value, 10);
           if (!isNaN(val)) totalBids += val;
         });
         const cardsDealt = cardsSequence[currentRound];
@@ -285,8 +285,9 @@
 
         const submitBtn = bidsForm.querySelector('button[type="submit"]');
         if (submitBtn) submitBtn.style.display = 'none';
-        bidsForm.appendChild(undoBtn);
-        bidsForm.appendChild(confirmBtn);
+        const totalDisplay = document.getElementById('bidsTotalDisplay');
+        bidsForm.insertBefore(confirmBtn, totalDisplay);
+        bidsForm.insertBefore(undoBtn, confirmBtn);
       };
         
       }
@@ -328,7 +329,6 @@
         input.type = 'number';
         input.id = `result-${index}`;
         input.min = 0;
-        input.value = 0;
         resultsForm.appendChild(label);
         resultsForm.appendChild(input);
         if (index === 0) input.focus();
@@ -367,7 +367,9 @@
           const cardsDealt = cardsSequence[currentRound];
           let totalTricks = 0;
           players.forEach((_, index) => {
-            const val = parseInt(document.getElementById(`result-${index}`).value, 10);
+            const resultInput = document.getElementById(`result-${index}`);
+            if (!resultInput.value) resultInput.value = 0;
+            const val = parseInt(resultInput.value, 10);
             if (!isNaN(val)) totalTricks += val;
           });
           if (totalTricks !== cardsDealt) {
